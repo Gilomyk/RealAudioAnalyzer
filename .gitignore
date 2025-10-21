@@ -1,0 +1,40 @@
+# === PyCharm / IntelliJ ===
+.idea/
+*.iml
+
+# === Python cache ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# === Virtual environments ===
+.venv/
+venv/
+env/
+ENV/
+
+# === Build / distribution ===
+build/
+dist/
+*.egg-info/
+
+# === Logs and temporary files ===
+*.log
+*.tmp
+*.swp
+
+# === Audio and media files ===
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.aiff
+
+# === JSON output and analysis results ===
+outputs/
+*.json
+
+# === OS-specific ===
+.DS_Store
+Thumbs.db
