@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, List
 import numpy as np
 import librosa
 
@@ -40,6 +40,90 @@ def merge_frame_data(rms_frames, fft_frames, time_tolerance=1e-3):
                 "fft_peaks": []
             })
     return merged
+
+
+def merge_frame_data_with_rhythm(frames: List[Dict[str, Any]],
+                                 onset_times: List[float],
+                                 beat_times: List[float],
+                                 plp_times: List[float],
+                                 plp_values: List[float],
+                                 time_tolerance: float = 1e-3) -> List[Dict[str, Any]]:
+    """
+    Dla każdej ramki dodaje flagi is_onset, is_beat i interpoluje lokalne tempo (PLP)
+    """
+    merged = []
+    plp_values = np.array(plp_values)
+    plp_times = np.array(plp_times)
+
+    for frame in frames:
+        t = frame["time"]
+        # is_onset
+        is_onset = any(abs(t - ot) <= time_tolerance for ot in onset_times)
+        # is_beat
+        is_beat = any(abs(t - bt) <= time_tolerance for bt in beat_times)
+        # local_tempo: interpolacja PLP
+        if t <= plp_times[0]:
+            local_tempo = float(plp_values[0])
+        elif t >= plp_times[-1]:
+            local_tempo = float(plp_values[-1])
+        else:
+            local_tempo = float(np.interp(t, plp_times, plp_values))
+
+        frame_copy = frame.copy()
+        frame_copy.update({
+            "is_onset": is_onset,
+            "is_beat": is_beat,
+            "local_tempo": local_tempo
+        })
+        merged.append(frame_copy)
+    return merged
+
+
+def merge_spectral_features(frames: List[Dict[str, Any]],
+                            spectral_frames: List[Dict[str, Any]],
+                            time_tolerance: float = 1e-3) -> List[Dict[str, Any]]:
+    """
+    Scala cechy spektralne z ramkami RMS/FFT w oparciu o dopasowanie czasowe.
+    Zakłada, że spectral_frames to lista słowników z kluczem 'time'.
+
+    Args:
+        frames: lista ramek (z RMS/FFT)
+        spectral_frames: lista ramek zwrócona z compute_spectral_features()
+        time_tolerance: maksymalna różnica czasów (sekundy), aby uznać ramki za odpowiadające sobie
+
+    Returns:
+        Lista ramek z dodanymi cechami spektralnymi.
+    """
+    merged = []
+
+    # Wydobywamy czasy ramek spektralnych
+    spectral_times = np.array([sf["time"] for sf in spectral_frames])
+
+    for frame in frames:
+        t = frame["time"]
+        # Znajdź najbliższą ramkę spektralną względem czasu
+        idx = np.argmin(np.abs(spectral_times - t))
+        if abs(spectral_times[idx] - t) > time_tolerance:
+            # jeśli zbyt daleko — nie łączymy
+            merged.append(frame)
+            continue
+
+        frame_copy = frame.copy()
+
+        # Pobierz dane spektralne z dopasowanej ramki
+        sf = spectral_frames[idx]
+
+        # Dodaj poszczególne cechy — dynamicznie (żeby nie zakładać z góry kluczy)
+        for key, val in sf.items():
+            if key == "time":
+                continue
+            frame_copy[key] = val
+
+        merged.append(frame_copy)
+
+    return merged
+
+
 
 
 def save_json(obj: Dict[str, Any], out_path: str, indent: int = 2) -> None:

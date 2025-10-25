@@ -1,11 +1,14 @@
 import argparse
 from pathlib import Path
 
-from core.io_utils import load_audio, save_json, merge_frame_data
+from core.io_utils import load_audio, save_json, merge_frame_data, merge_spectral_features, merge_frame_data_with_rhythm
 from core.frames import analyze_rms_from_signal, analyze_rms  # funkcja zwracająca dict
 from core.compute_fft import analyze_fft
+from core.rhythm import detect_onsets, estimate_tempo_global, compute_plp, beat_track
+from core.spectral import compute_spectral_features
 
 import config.config as cfg
+
 
 # --- Funkcje pomocnicze ---
 
@@ -39,27 +42,37 @@ def main():
     # Analiza FFT
     fft_frames = analyze_fft(y, sr, frame_length=n_fft, hop_length=hop_len_samples)
 
+    # Połączenie RMS i FFT
     merged_frames = merge_frame_data(rms_result["frames"], fft_frames)
+
+
+    # Obliczanie tempa, detekcja onset i uderzeń
+    onset_times, onset_frames, oenv = detect_onsets(y, sr, hop_len_samples, backtrack=True)
+    global_tempo = estimate_tempo_global(y=y, sr=sr, onset_envelope=oenv, hop_length=hop_len_samples)
+    plp_curve, plp_times = compute_plp(y, sr, hop_len_samples)
+    tempo_est, beat_times, beat_frames = beat_track(y, sr, hop_len_samples)
+
+    merged_frames = merge_frame_data_with_rhythm(merged_frames, onset_times, beat_times, plp_times, plp_curve)
+
+    spectral_data = compute_spectral_features(
+        y, sr,
+        n_fft=n_fft,
+        hop_length=hop_len_samples,
+        n_mfcc=13,
+        n_mels=128,
+        roll_percent=0.85
+    )
+
+    merged_frames = merge_spectral_features(merged_frames, spectral_data)
 
     output = {
         "source": str(Path(args.input).resolve()),
         "sr": sr,
-        "frames": merged_frames
+        "global_tempo_bpm": global_tempo,
+        "frames": merged_frames,
+        "onset_frames": onset_frames,
+        "beat_frames": beat_frames,
     }
-
-    # Tworzenie struktury JSON
-    # output = {
-    #     "source": str(Path(args.input).resolve()),
-    #     "sr": sr,
-    #     "rms_analysis": rms_result,          # cała struktura z ramkami RMS
-    #     "fft_analysis": {
-    #         "n_fft": n_fft,
-    #         "hop_length": hop_len_samples,
-    #         "frame_samples": frame_len_samples,
-    #         "frames": fft_frames              # lista słowników z compute_fft.analyze_fft
-    #     },
-    #     # na przyszłość: tu można dopisać: "onsets":..., "beats":..., "mfcc":...
-    # }
 
     # 6) Zapis do pliku
     save_json(output, args.out)
