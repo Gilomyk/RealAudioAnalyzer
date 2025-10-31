@@ -29,8 +29,10 @@ BANDS_SIMPLE = {
 
 
 # --- Ogólne ścieżki domyślne ---
-DEFAULT_OUTPUT_PATH = "outputs/analysis_full.json"
-DEFAULT_INPUT_EXAMPLE = "examples/slowa.wav"
+
+DEFAULT_INPUT_EXAMPLE = "examples/Tchaikovsky-Waltz-of-the-Flowers.mp3"
+DEFAULT_OUTPUT_PATH = "outputs/tchaikovsky.json"
+DEFAULT_OUTPUT_STATS_PATH = "outputs/tchaikovsky_stats.json"
 
 # --- Debug / logowanie ---
 VERBOSE = True

@@ -17,7 +17,7 @@ import config.config as cfg
 # --- Jeśli uruchamiasz skrypt bezpośrednio ---
 def main():
     parser = argparse.ArgumentParser(description="Audio analysis pipeline (RMS -> FFT -> save JSON)")
-    parser.add_argument("input", help="Ścieżka do pliku audio (np. .wav)", default=cfg.DEFAULT_INPUT_EXAMPLE)
+    parser.add_argument("--input", help="Ścieżka do pliku audio (np. .wav)", default=cfg.DEFAULT_INPUT_EXAMPLE)
     parser.add_argument("--out", help="Ścieżka do pliku JSON z wynikami", default=cfg.DEFAULT_OUTPUT_PATH)
     parser.add_argument("--frame", type=float, help="Długość ramki (s) dla RMS i jako bazowe n_fft dla FFT", default=cfg.FRAME_DURATION)
     parser.add_argument("--hop", type=float, help="Hop (s) dla RMS i FFT", default=cfg.HOP_DURATION)
