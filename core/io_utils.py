@@ -126,12 +126,20 @@ def merge_spectral_features(frames: List[Dict[str, Any]],
 
 
 
-def save_json(obj: Dict[str, Any], out_path: str, indent: int = 2) -> None:
+def save_json(obj: Dict[str, Any],
+              input_path: str,
+              fft_mode: str = "raw",
+              out_dir: str = "output",
+              suffix: str = "",
+              indent: int = 2) -> Path:
     """
     Zapisuje strukturę Python->JSON. Tworzy katalogi po drodze.
     """
-    p = Path(out_path)
-    p.parent.mkdir(parents=True, exist_ok=True)
+    input_name = Path(input_path).stem  # np. song.wav -> "song"
+    file_name = f"analysis_{input_name}_{fft_mode}{suffix}.json"
+    out_path = Path(out_dir) / file_name
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
     # JSON nie obsługuje numpy types bezpośrednio — konwertujemy float32/np.int64 -> native
     def _convert(o):
         if isinstance(o, (np.floating,)):
@@ -142,5 +150,7 @@ def save_json(obj: Dict[str, Any], out_path: str, indent: int = 2) -> None:
             return o.tolist()
         return o
 
-    with p.open("w", encoding="utf-8") as f:
-        json.dump(obj, f, indent=indent, default=_convert)
+    with out_path.open("w", encoding="utf-8") as f:
+        json.dump(obj, f, indent=indent, ensure_ascii=False, default=_convert)
+
+    return out_path

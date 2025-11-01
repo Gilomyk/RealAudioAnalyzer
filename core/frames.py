@@ -58,6 +58,7 @@ def analyze_rms_from_signal(y: np.ndarray, sr: int, frame_duration: float = FRAM
     Analiza RMS bez operacji I/O.
     Zwraca dict z metadanymi i listą ramek: {"sr":..., "frame_duration":..., "hop_duration":..., "frames":[{"time":..., "rms":...}, ...]}
     """
+    print("Analyzing RMS frames...")
     frames, times = frames_from_signal(y, sr, frame_duration, hop_duration)
     results: List[Dict] = []
     for frame, t in zip(frames, times):
@@ -67,11 +68,3 @@ def analyze_rms_from_signal(y: np.ndarray, sr: int, frame_duration: float = FRAM
             "rms": float(rms)
         })
     return {"sr": sr, "frame_duration": frame_duration, "hop_duration": hop_duration, "frames": results}
-
-def analyze_rms(path: str, out_json: str = None, frame_duration: float = FRAME_DURATION, hop_duration: float = HOP_DURATION):
-    """
-    Wrapper: wczytuje plik, deleguje do analyze_rms_from_signal i zwraca wyniki.
-    Nie zapisuje pliku (zapisamy to centralnie w analyze.py / io_utils.save_json).
-    """
-    y, sr = load_audio(path)   # zakładam, że load_audio jest w core.io_utils i importowalne
-    return analyze_rms_from_signal(y, sr, frame_duration, hop_duration)

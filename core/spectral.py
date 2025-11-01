@@ -21,6 +21,7 @@ def compute_spectral_features(y: np.ndarray,
       time, spectral_centroid, spectral_bandwidth, rolloff, flatness,
       spectral_contrast (lista), chroma (lista), mfcc (lista), mfcc_delta (lista)
     """
+    print("Computing spectral features...")
     # 1) STFT (absolutna amplituda)
     S_complex = compute_stft(y, n_fft=n_fft, hop_length=hop_length)
     S = np.abs(S_complex)  # magnituda (f × t)

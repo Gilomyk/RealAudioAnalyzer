@@ -48,12 +48,12 @@ def compute_min_max(frames: List[Dict[str, Any]]) -> Dict[str, Dict[str, float]]
     return result
 
 
-def append_stats_to_json(json_path: str, out_path: str = None):
+def append_stats_to_json(json_path: Path, out_path: str = None):
     """
     Wczytuje plik JSON z analizą audio, liczy statystyki min/max
     i dopisuje je w sekcji "stats".
     """
-    json_path = Path(json_path)
+    print(f"Applying stats...")
     with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -68,8 +68,8 @@ def append_stats_to_json(json_path: str, out_path: str = None):
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
-    print(f"Dopisano statystyki do: {out_file}")
-    print(f"Liczba zmiennych: {len(stats)}")
+    print(f"Added statistics to: {out_file}")
+    print(f"Parameters number: {len(stats)}")
 
 
 if __name__ == "__main__":

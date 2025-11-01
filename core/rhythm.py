@@ -1,6 +1,7 @@
 # core/rhythm.py
 import numpy as np
 import librosa
+import librosa.feature.rhythm as rhythm
 from typing import List, Dict, Any
 
 def compute_onset_envelope(y, sr, hop_length):
@@ -26,7 +27,7 @@ def estimate_tempo_global(y=None, sr=22050, onset_envelope=None, hop_length=512)
     """
     Zwraca estymowane tempo globalne (BPM) przy użyciu librosa.beat.tempo
     """
-    tempo = librosa.beat.tempo(y=y, sr=sr, onset_envelope=onset_envelope, hop_length=hop_length)
+    tempo = rhythm.tempo(y=y, sr=sr, onset_envelope=onset_envelope, hop_length=hop_length)
     # tempo może zwrócić ndarray — bierzemy pierwszą wartość (mono)
     return float(tempo[0]) if hasattr(tempo, "__len__") else float(tempo)
 
@@ -45,6 +46,7 @@ def beat_track(y, sr, hop_length, start_bpm=120.0, tightness=100):
     Beat tracking returns (tempo, beat_times, beat_frames)
     tempo: estimated global bpm
     """
+    print("Beat tracking...")
     tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr, onset_envelope=None,
                                                  hop_length=hop_length, start_bpm=start_bpm, tightness=tightness)
     beat_times = librosa.frames_to_time(beat_frames, sr=sr, hop_length=hop_length)
